@@ -1,0 +1,5 @@
+nni>=1.2
+albumentations
+torch>=1.2
+torchvision
+tensorboard
