@@ -58,12 +58,12 @@ class CheckpointCallback(Callback):
     def on_epoch_end(self, epoch, cur_metric):
         if self.mode:
             if cur_metric > self.trainer.best_metric:
-                self.save(epoch)
                 self.trainer.best_metric = cur_metric
+                self.save(epoch)
         else:
             if cur_metric < self.trainer.best_metric:
-                self.save(epoch)
                 self.trainer.best_metric = cur_metric
+                self.save(epoch)
         self.best_metric = self.trainer.best_metric
 
     def save(self, epoch):

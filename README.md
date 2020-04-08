@@ -7,7 +7,7 @@ CUDA_VISIBLE_DEVICES=0 python -m ipdb search.py --debug dataset.name fakedata
 # search
 
 ```bash
-CUDA_VISIBLE_DEVICES=0 python search.py
+CUDA_VISIBLE_DEVICES=0 python search.py --config_file /path/to/cfg_search.yaml
 ```
 
 

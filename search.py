@@ -48,7 +48,7 @@ if __name__ == "__main__":
     logger = MyLogger('EnasSkin', cfg).getlogger()
     logger.info(args)
     logger.info(cfg)
-    with open(os.path.join(cfg.logger.path, 'cfg.yaml'), 'w') as f:
+    with open(os.path.join(cfg.logger.path, 'cfg_search.yaml'), 'w') as f:
         f.write(str(cfg))
 
     dataset_train, dataset_valid = build_dataset(cfg)

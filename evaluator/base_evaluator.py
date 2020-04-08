@@ -30,6 +30,10 @@ from abc import ABC, abstractmethod
 global logger
 global writter
 
+__all__ = [
+    'BaseEvaluator'
+]
+
 class BaseEvaluator(ABC):
 
     def init(self):
@@ -73,25 +77,5 @@ class BaseEvaluator(ABC):
         pass
 
     @abstractmethod
-    def validate_one_epoch(self, epoch):
+    def valid_one_epoch(self, epoch):
         pass
-
-    def train(self, validate=True):
-        for epoch in range(self.num_epochs):
-            for callback in self.callbacks:
-                callback.on_epoch_begin(epoch)
-
-            # training
-            _logger.info("Epoch %d Training", epoch)
-            self.train_one_epoch(epoch)
-
-            if validate:
-                # validation
-                _logger.info("Epoch %d Validating", epoch)
-                self.validate_one_epoch(epoch)
-
-            for callback in self.callbacks:
-                callback.on_epoch_end(epoch)
-
-    def validate(self):
-        self.validate_one_epoch(-1)
