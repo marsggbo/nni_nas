@@ -41,7 +41,7 @@ if __name__ == "__main__":
     parser = ArgumentParser("darts")
     parser.add_argument("--config_file", default='./config/retrain.yaml', type=str)
     parser.add_argument("--train_epochs", default=2, type=int)
-    parser.add_argument("--arc_path", default="./outputs/checkpoint_0")
+    parser.add_argument("--arc_path") # "./outputs/checkpoint_0" or "./outputs/checkpoint_0/epoch_1.json"
     parser.add_argument("--debug", action="store_true", default=False)
     parser.add_argument("opts", help="Modify config options using the command-line", default=None, nargs=argparse.REMAINDER)
 

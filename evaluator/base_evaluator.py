@@ -11,7 +11,6 @@ from argparse import ArgumentParser
 import numpy as np
 import torch
 import torch.nn as nn
-import torchline
 from torch.utils.tensorboard import SummaryWriter
 
 import nni
