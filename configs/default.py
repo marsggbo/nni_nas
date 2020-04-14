@@ -234,7 +234,9 @@ _C.mutator.EnasMutator.branch_bias = 0.25
 _C.mutator.EnasMutator.arch_loss_weight = 0.02 # 0.002 small 0.02 medium 0.2 big
 _C.mutator.EnasMutator.reward_weight = 50
 
-
+_C.mutator.DartsMutator = CN()
+_C.mutator.DartsMutator.arc_lr = 3e-4
+_C.mutator.DartsMutator.unrolled = False # if true: second-order; else: first-order
 # ---------------------------------------------------------------------------- #
 # trainer
 # ---------------------------------------------------------------------------- #

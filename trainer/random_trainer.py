@@ -99,7 +99,6 @@ class RandomTrainer(Trainer):
                                                        batch_size=self.batch_size,
                                                        num_workers=self.workers,
                                                        pin_memory=True)
-        self.num_batches_per_epoch = len(self.train_loader)
 
         if hasattr(self.cfg, 'kd') and self.cfg.kd.enable:
             self.kd_model = load_kd_model(self.cfg).to(self.device)
