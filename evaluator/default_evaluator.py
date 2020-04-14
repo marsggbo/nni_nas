@@ -153,7 +153,7 @@ class DefaultEvaluator(BaseEvaluator):
                                        'val_acc': val_acc,
                                        'arc': arc}
         sorted_size_acc = sorted(self.size_acc.items(),
-                                 key=lambda x: x[1]['val_acc'], reverse=True)
+                                 key=lambda x: x[1]['val_acc']['save_metric'].avg, reverse=True)
         return sorted_size_acc[0][1]
 
     def run(self, arc, validate=True):
