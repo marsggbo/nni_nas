@@ -10,13 +10,13 @@ NNI_NAS v0.1
 # debug
 
 ```bash
-CUDA_VISIBLE_DEVICES=0 python search.py --config_file ./connfig/search.yaml --debug dataset.name fakedata
+CUDA_VISIBLE_DEVICES=0 python search.py --config_file ./configs/search.yaml debug dataset.name fakedata
 ```
 
 # search
 
 ```bash
-CUDA_VISIBLE_DEVICES=0 python search.py --config_file ./connfig/search.yaml
+CUDA_VISIBLE_DEVICES=0 python search.py --config_file ./configs/search.yaml
 ```
 
 
@@ -24,14 +24,9 @@ CUDA_VISIBLE_DEVICES=0 python search.py --config_file ./connfig/search.yaml
 after search, the arch checkpoint will be saved in, for example, `output/checkpoint_0/epoch_3.json`.
 
 ```
-CUDA_VISIBLE_DEVICES=0 python retrain.py --config_file ./config/retrain.yaml --arc-checkpoint output/checkpoint_0/epoch_3.json
+CUDA_VISIBLE_DEVICES=0 python retrain.py --config_file ./configs/retrain.yaml --arc_path output/checkpoint_0/epoch_3.json
 ```
 
-# Features
-
-## 1. knowledge distilltation for re-training
-
-By default, we expect you to load a teacher network that is trained by using [torchline](https://github.com/marsggbo/torchline). You can also use your own method to load the teacher network by modifying `kd_model.py`.
 
 # Todo
 

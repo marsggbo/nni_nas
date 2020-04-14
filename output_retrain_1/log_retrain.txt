@@ -1,0 +1,1 @@
+[2020-04-14 19:11:10,789] retrain.py-><module> line:60 [INFO]args:Namespace(arc_path='output/checkpoint_0', config_file='./configs/retrain.yaml', opts=[], train_epochs=2)

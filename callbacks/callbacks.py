@@ -41,8 +41,10 @@ class CheckpointCallback(Callback):
         self.warn_flag = True
         if self.mode: # the more the better, e.g. acc
             self.best_metric = -1. * np.inf
+            print("The metric is bigger, the better, like accuracy")
         else: # the less, the better, e.g. epe
             self.best_metric = np.inf
+            print("The metric is lower, the better, like loss")
 
     def parse_mode(self, mode):
         if mode.lower() == 'min':
@@ -55,16 +57,21 @@ class CheckpointCallback(Callback):
             print(f'''Mode only supports [True / max, False / min], but got {mode, type(mode)}''')
             raise NotImplementedError
 
-    def on_epoch_end(self, epoch, cur_metric):
+    def update_best_metric(self, cur_metric):
+        self.is_best = False
         if self.mode:
             if cur_metric > self.trainer.best_metric:
                 self.trainer.best_metric = cur_metric
-                self.save(epoch)
+                self.is_best = True
         else:
             if cur_metric < self.trainer.best_metric:
                 self.trainer.best_metric = cur_metric
-                self.save(epoch)
+                self.is_best = True
         self.best_metric = self.trainer.best_metric
+        
+    def on_epoch_end(self, epoch):
+        if self.is_best:
+            self.save(epoch)
 
     def save(self, epoch):
         model_state_dict = self.get_state_dict(self.model) if hasattr(self.trainer, 'model') else "No state_dict"

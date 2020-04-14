@@ -10,19 +10,21 @@ import numpy as np
 import torch
 import torch.optim as optim
 
-from mutator import EnasMutator
-from nni.nas.pytorch.trainer import Trainer
-from nni.nas.pytorch.utils import AverageMeter, AverageMeterGroup
-from utils import MyLogger, calc_real_model_size
 from kd_model import load_kd_model, loss_fn_kd
+from utils import AverageMeterGroup
+
+from .build import TRAINER_REGISTRY
+from .default_trainer import Trainer
+
 
 __all__ = [
     'RandomTrainer',
 ]
 
+
+@TRAINER_REGISTRY.register()
 class RandomTrainer(Trainer):
-    def __init__(self, cfg, model, loss, metrics, reward_function, optimizer,
-                 dataset_train, dataset_valid, mutator=None, callbacks=None, debug=False):
+    def __init__(self, cfg):
         """Initialize an RandomTrainer.
             Parameters
             ----------
@@ -69,21 +71,12 @@ class RandomTrainer(Trainer):
             aux_weight : float
                 Weight of auxiliary head loss. ``aux_weight * aux_loss`` will be added to total loss.
         """
-        device = cfg.trainer.device
-        log_frequency = cfg.logger.log_frequency
-        batch_size = cfg.dataset.batch_size
-        num_epochs = cfg.trainer.num_epochs
-        workers = cfg.dataset.workers
-        super().__init__(model, mutator if mutator is not None else EnasMutator(model),
-                         loss, metrics, optimizer, num_epochs, dataset_train, dataset_valid,
-                         batch_size, workers, device, log_frequency, callbacks)
-
+        cfg.defrost()
+        cfg.mutator.name = 'RandomMutator'
+        cfg.freeze()
+        super(RandomTrainer, self).__init__(cfg)
         self.cfg = cfg
-        self.debug = debug
-        self.logger = MyLogger(__name__, cfg).getlogger()
-        self.start_epoch = 0
-        self.warm_start_epoch = cfg.trainer.warm_start_epoch
-        self.reward_function = reward_function
+        self.debug = cfg.debug
 
         # preparing dataset
         n_train = len(self.dataset_train)
@@ -93,69 +86,28 @@ class RandomTrainer(Trainer):
         train_sampler = torch.utils.data.sampler.SubsetRandomSampler(indices[:-split])
         valid_sampler = torch.utils.data.sampler.SubsetRandomSampler(indices[-split:])
         self.train_loader = torch.utils.data.DataLoader(self.dataset_train,
-                                                        batch_size=batch_size,
+                                                        batch_size=self.batch_size,
                                                         sampler=train_sampler,
-                                                        num_workers=workers,
+                                                        num_workers=self.workers,
                                                         pin_memory=True)
         self.valid_loader = torch.utils.data.DataLoader(self.dataset_train,
-                                                        batch_size=batch_size,
+                                                        batch_size=self.batch_size,
                                                         sampler=valid_sampler,
-                                                        num_workers=workers,
+                                                        num_workers=self.workers,
                                                         pin_memory=True)
         self.test_loader = torch.utils.data.DataLoader(self.dataset_valid,
-                                                       batch_size=batch_size,
-                                                       num_workers=workers,
+                                                       batch_size=self.batch_size,
+                                                       num_workers=self.workers,
                                                        pin_memory=True)
         self.num_batches_per_epoch = len(self.train_loader)
 
         if hasattr(self.cfg, 'kd') and self.cfg.kd.enable:
             self.kd_model = load_kd_model(self.cfg).to(self.device)
-        else:
-            self.kd_model = None
-
-    def resume(self):
-        path = self.cfg.model.resume_path
-        if path:
-            assert os.path.exists(path), "{} does not exist".format(path)
-            ckpt = torch.load(path)
-            self.start_epoch = ckpt['epoch'] + 1
-            self.model.load_state_dict(ckpt['model'])
-            self.optimizer.load_state_dict(ckpt['optimizer_state_dict'])
-            for callback in self.callbacks:
-                if hasattr(callback, 'best_metric'):
-                    callback.best_metric = ckpt['best_metric']
-            self.logger.info('Resuming training from epoch {}'.format(self.start_epoch))
-
-        if len(self.cfg.trainer.device_ids) > 1:
-            device_ids = self.cfg.trainer.device_ids
-            num_gpus_available = torch.cuda.device_count()
-            assert num_gpus_available >= len(device_ids), "you can only use {} device(s)".format(num_gpus_available)
-            self.model = torch.nn.DataParallel(self.model, device_ids=device_ids)
-            if self.kd_model:
+            if len(self.cfg.trainer.device_ids) > 1:
                 self.kd_model = torch.nn.DataParallel(self.kd_model, device_ids=device_ids)
                 self.kd_model.eval()
-
-    def train(self, validate=True):
-        self.resume()
-        for epoch in range(self.start_epoch, self.num_epochs):
-            for callback in self.callbacks:
-                callback.on_epoch_begin(epoch)
-
-            # training
-            self.logger.info("Epoch {} Training".format(epoch))
-            meters = self.train_one_epoch(epoch)
-            self.logger.info("Final training metric: {}".format(meters))
-
-            if validate:
-                # validation
-                self.logger.info("Epoch {} Validatin".format(epoch))
-                self.validate_one_epoch(epoch)
-
-            for callback in self.callbacks:
-                if hasattr(callback, 'best_metric'):
-                    callback.on_epoch_end(epoch, meters.meters['acc1'].avg)
-                else:
-                    callback.on_epoch_end(epoch)
+        else:
+            self.kd_model = None
 
     def train_one_epoch(self, epoch):
         # Sample model and train
@@ -235,10 +187,4 @@ class RandomTrainer(Trainer):
 
             if self.log_frequency is not None and step % self.log_frequency == 0:
                 self.logger.info("Test: Step [{}/{}]  {}".format(step + 1, len(self.test_loader), meters))
-        self.logger.info("Finwal model EPE = {}".format(meters.meters['epe'].avg))
-
-    def get_model(self):
-        return self.model.state_dict()
-
-    def model_size(self):
-        return calc_real_model_size(self.model, self.mutator)*4/1024**2
+        self.logger.info("Finwal model metric = {}".format(meters.meters['save_metric'].avg))

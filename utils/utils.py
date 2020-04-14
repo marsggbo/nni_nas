@@ -2,12 +2,20 @@
 # Licensed under the MIT license.
 
 import logging
+import os
 
 import numpy as np
 import torch
 
 import nni
+from configs import add_config, get_cfg
 
+__all__ = [
+    'MyLogger',
+    'calc_real_model_size',
+    'metrics',
+    'reward_function',
+]
 
 class MyLogger(object):
     def __init__(self, name, cfg=None):
@@ -94,6 +102,7 @@ def metrics(outputs, targets, topk=(1, 3)):
     for k in topk:
         correct_k = correct[:k].view(-1).float().sum(0)
         res["acc{}".format(k)] = correct_k.mul_(1.0 / batch_size).item()
+    res['save_metric'] = res[f"acc{topk[0]}"]
     return res
 
 def reward_function(outputs, targets, topk=(1,)):

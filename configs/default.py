@@ -157,25 +157,6 @@ _C.model.dropout_rate = 0.5
 _C.model.aux_weight = 0.4
 
 
-
-# ---------------------------------------------------------------------------- #
-# mutator
-# ---------------------------------------------------------------------------- #
-
-_C.mutator = CN()
-_C.mutator.name = 'EnasMutator'
-
-_C.mutator.EnasMutator = CN()
-_C.mutator.EnasMutator.reward_function = ''
-_C.mutator.EnasMutator.lstm_size = 64
-_C.mutator.EnasMutator.lstm_num_layers = 1
-_C.mutator.EnasMutator.tanh_constant = 1.5
-_C.mutator.EnasMutator.cell_exit_extra_step = False
-_C.mutator.EnasMutator.skip_target = 0.4
-_C.mutator.EnasMutator.branch_bias = 0.25
-_C.mutator.EnasMutator.arch_loss_weight = 0.02 # 0.002 small 0.02 medium 0.2 big
-_C.mutator.EnasMutator.reward_weight = 50
-
 # ---------------------------------------------------------------------------- #
 # loss
 # ---------------------------------------------------------------------------- #
@@ -227,6 +208,34 @@ _C.optim.scheduler.step_size = 10
 _C.optim.scheduler.milestones = [10, 25, 35, 50]
 
 # ---------------------------------------------------------------------------- #
+# evaluator
+# ---------------------------------------------------------------------------- #
+
+_C.evaluator = CN()
+_C.evaluator.name = 'DefaultEvaluator'
+_C.evaluator.num_epochs = 200
+
+
+# ---------------------------------------------------------------------------- #
+# mutator
+# ---------------------------------------------------------------------------- #
+
+_C.mutator = CN()
+_C.mutator.name = 'EnasMutator'
+
+_C.mutator.EnasMutator = CN()
+_C.mutator.EnasMutator.reward_function = ''
+_C.mutator.EnasMutator.lstm_size = 64
+_C.mutator.EnasMutator.lstm_num_layers = 1
+_C.mutator.EnasMutator.tanh_constant = 1.5
+_C.mutator.EnasMutator.cell_exit_extra_step = False
+_C.mutator.EnasMutator.skip_target = 0.4
+_C.mutator.EnasMutator.branch_bias = 0.25
+_C.mutator.EnasMutator.arch_loss_weight = 0.02 # 0.002 small 0.02 medium 0.2 big
+_C.mutator.EnasMutator.reward_weight = 50
+
+
+# ---------------------------------------------------------------------------- #
 # trainer
 # ---------------------------------------------------------------------------- #
 
@@ -260,6 +269,8 @@ _C.callback.checkpoint.mode = 'max'
 # ---------------------------------------------------------------------------- #
 # other
 # ---------------------------------------------------------------------------- #
+_C.debug = False
+_C.comment = ''
 def _version_logger(save_dir, logger_name=''):
     path = os.path.join(save_dir, logger_name)
     if (not os.path.exists(path)) or (not os.listdir(path)):

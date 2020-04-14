@@ -8,9 +8,8 @@ import torch
 
 import nni
 from configs import add_config, get_cfg
-from evaluator import DefaultEvaluator
+from evaluator import build_evaluator
 from nni.nas.pytorch.fixed import apply_fixed_architecture
-from nni.nas.pytorch.utils import AverageMeter
 from utils import MyLogger
 
 
@@ -23,12 +22,12 @@ def setup_cfg(args):
         cfg.logger.path = os.path.dirname(cfg.model.resume_path)
     else:
         index = 0
-        path = os.path.dirname(args.arc_path)+'_train_{}'.format(index)
+        path = os.path.dirname(args.arc_path)+'_retrain_{}'.format(index)
         while os.path.exists(path):
             index += 1
-            path = os.path.dirname(args.arc_path)+'_train_{}'.format(index)
+            path = os.path.dirname(args.arc_path)+'_retrain_{}'.format(index)
         cfg.logger.path = path
-    cfg.logger.log_file = os.path.join(cfg.logger.path, 'log_train.txt')
+    cfg.logger.log_file = os.path.join(cfg.logger.path, 'log_retrain.txt')
     os.makedirs(cfg.logger.path, exist_ok=True)
     cfg.freeze()
     SEED = cfg.seed
@@ -39,10 +38,9 @@ def setup_cfg(args):
 
 if __name__ == "__main__":
     parser = ArgumentParser("darts")
-    parser.add_argument("--config_file", default='./config/retrain.yaml', type=str)
+    parser.add_argument("--config_file", default='./configs/retrain.yaml', type=str)
     parser.add_argument("--train_epochs", default=2, type=int)
     parser.add_argument("--arc_path") # "./outputs/checkpoint_0" or "./outputs/checkpoint_0/epoch_1.json"
-    parser.add_argument("--debug", action="store_true", default=False)
     parser.add_argument("opts", help="Modify config options using the command-line", default=None, nargs=argparse.REMAINDER)
 
     args = parser.parse_args()
@@ -55,13 +53,13 @@ if __name__ == "__main__":
 
     # configuration
     cfg = setup_cfg(args)
-    with open(os.path.join(cfg.logger.path, 'cfg_retrain.yaml'), 'w') as f:
+    with open(os.path.join(cfg.logger.path, 'retraiin.yaml'), 'w') as f:
         f.write(str(cfg))
     cfg.update({'args': args})
     logger = MyLogger(__name__, cfg).getlogger()
     logger.info('args:{}'.format(args))
 
-    evaluator = DefaultEvaluator(cfg, args.arc_path)
+    evaluator = build_evaluator(cfg)
     
     if os.path.isdir(arc_path):
         best_arch_info = evaluator.compare()

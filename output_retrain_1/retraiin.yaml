@@ -31,7 +31,7 @@ callback:
         mode: 'max'
 comment: ''
 dataset:
-    batch_size: 1
+    batch_size: 8
     datapath: '../datasets'
     name: 'fakedata'
     testlist: './datasets/test.txt'
@@ -42,7 +42,7 @@ evaluator:
     name: 'DefaultEvaluator'
     num_epochs: 200
 input:
-    size: (32, 32)
+    size: (224, 224)
 kd:
     enable: 0
     loss:
@@ -54,10 +54,10 @@ kd:
 label_transforms:
     name: 'default'
 logger:
-    log_file: './outputs\checkpoint_0\log_search.txt'
+    log_file: 'output_retrain_1\log_retrain.txt'
     log_frequency: 100
     name: ''
-    path: './outputs\checkpoint_0'
+    path: 'output_retrain_1'
 loss:
     CrossEntropy:
         class_weight: []
@@ -84,7 +84,7 @@ model:
     in_channels: 3
     max_disp: 40
     name: 'ClsNet'
-    num_layers: 4
+    num_layers: 5
     num_nodes: 5
     out_channels: 32
     resume_path: ''
@@ -118,7 +118,7 @@ optim:
         verbose: True
     weight_decay: 0.0005
 output_root: './outputs'
-seed: 29
+seed: 74
 trainer:
     EnasTrainer:
         baseline_decay: 0.999
@@ -130,7 +130,7 @@ trainer:
     accumulate_steps: 1
     device: 'cuda'
     device_ids: [0]
-    name: 'RandomTrainer'
+    name: 'EnasTrainer'
     num_epochs: 40
     startEpoch: 0
     startRound: 0
@@ -168,8 +168,8 @@ transforms:
     name: 'DefaultTransforms'
     tensor:
         normalization:
-            mean: [0.6075, 0.4564, 0.4182]
-            std: [0.2158, 0.1871, 0.1826]
+            mean: [0.5, 0.5, 0.5]
+            std: [0.5, 0.5, 0.5]
         random_erasing:
             enable: 0
             p: 0.5

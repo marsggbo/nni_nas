@@ -18,28 +18,21 @@ from utils import (AverageMeterGroup, MyLogger, calc_real_model_size,
                    mixup_loss_fn, parse_cfg_for_scheduler)
 
 from .base_evaluator import BaseEvaluator
+from .build import EVALUATOR_REGISTRY
 
 __all__ = [
     'DefaultEvaluator'
 ]
 
+@EVALUATOR_REGISTRY.register()
 class DefaultEvaluator(BaseEvaluator):
-    def __init__(self, cfg, arc_path, callbacks=[]):
+    def __init__(self, cfg):
         super(DefaultEvaluator, self).__init__()
         self.cfg = cfg
+        self.debug = cfg.debug
+        self.callbacks = self.generate_callbacks()
 
-        # CheckpointCallback
-        self.mode = self.cfg.callback.checkpoint.mode
-        self.ckpt_callback = CheckpointCallback(
-            self.cfg.logger.path,
-            'best_retrain.pth',
-            mode=self.mode)
-        if not callbacks:
-            self.callbacks = [self.ckpt_callback]
-        else:
-            self.callbacks = callbacks
-
-        self.arcs = self.load_arcs(arc_path)
+        self.arcs = self.load_arcs(cfg.args.arc_path)
         self.writter = SummaryWriter(os.path.join(self.cfg.logger.path, 'summary_runs'))
         self.logger = MyLogger(__name__, cfg).getlogger()
         self.size_acc = {} # {'epoch1': [model_size, acc], 'epoch2': [model_size, acc], ...}
@@ -183,7 +176,8 @@ class DefaultEvaluator(BaseEvaluator):
             callback.build(self.model, self.mutator, self)
 
         # resume
-        start_epoch, self.best_metric = self.resume()
+        self.start_epoch = 0
+        self.resume()
 
         # fintune
         # todo： improve robustness, bug of optimizer resume
@@ -203,7 +197,7 @@ class DefaultEvaluator(BaseEvaluator):
                 self.kd_model = torch.nn.DataParallel(self.kd_model, device_ids=device_ids)
 
         # start training
-        for epoch in range(start_epoch, self.cfg.trainer.num_epochs):
+        for epoch in range(self.start_epoch, self.cfg.evaluator.num_epochs):
             for callback in self.callbacks:
                 callback.on_epoch_begin(epoch)
 
@@ -236,7 +230,7 @@ class DefaultEvaluator(BaseEvaluator):
         self.model.train()
 
         for step, (x, y) in enumerate(dataloader):
-            if config.args.debug and step > 1:
+            if self.debug and step > 1:
                 break
             for callback in self.callbacks:
                 callback.on_batch_begin(epoch)
@@ -305,7 +299,7 @@ class DefaultEvaluator(BaseEvaluator):
 
         with torch.no_grad():
             for step, (X, y) in enumerate(dataloader):
-                if config.args.debug and step > 1:
+                if self.debug and step > 1:
                     break
                 X, y = X.to(self.device, non_blocking=True), y.to(self.device, non_blocking=True)
                 bs = X.size(0)
@@ -346,11 +340,11 @@ class DefaultEvaluator(BaseEvaluator):
             return self.valid_meters['valid_loss'].avg
 
     def resume(self, mode=True):
+        self.best_metric = -999
         path = self.cfg.model.resume_path
         if path:
             assert os.path.exists(path), "{} does not exist".format(path)
             ckpt = torch.load(path)
-            start_epoch = ckpt['epoch'] + 1
             try:
                 self.model.load_state_dict(ckpt['model_state_dict'])
             except:
@@ -364,11 +358,27 @@ class DefaultEvaluator(BaseEvaluator):
                 self.model.load_state_dict(new_state_dict)
             self.optimizer.load_state_dict(ckpt['optimizer_state_dict'])
             self.lr_scheduler.load_state_dict(ckpt['lr_scheduler_state_dict'])
-            self.logger.info('Resuming training from epoch {}'.format(start_epoch))
-            return ckpt['epoch'], ckpt['best_metric']
-        else:
-            if self.mode: # the more the better, e.g. acc
-                best_metric = -1. * np.inf
-            else: # the less, the better, e.g. epe
-                best_metric = np.inf
-            return 0, best_metric
+            self.logger.info('Resuming training from epoch {}'.format(self.start_epoch))
+            self.best_metric = ckpt['best_metric']
+            self.start_epoch = ckpt['epoch'] + 1
+
+        for callback in self.callbacks:
+            if isinstance(callback, CheckpointCallback):
+                if self.best_metric == -999:
+                    self.best_metric = callback.best_metric
+                else:
+                    callback.best_metric = self.best_metric
+
+    def generate_callbacks(self):
+        '''
+        Args：
+            func: a function to generate other callbacks, must return a list
+        Return:
+            a list of callbacks.
+        '''
+        self.ckpt_callback = CheckpointCallback(
+            checkpoint_dir=self.cfg.logger.path,
+            name='best_retrain.pth',
+            mode=self.cfg.callback.checkpoint.mode)
+        callbacks = [self.ckpt_callback]
+        return callbacks
