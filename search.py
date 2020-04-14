@@ -45,7 +45,7 @@ if __name__ == "__main__":
     parser.add_argument("opts", help="Modify config options using the command-line", default=None, nargs=argparse.REMAINDER)
     args = parser.parse_args()
     cfg = setup_cfg(args)
-    logger = MyLogger('EnasSkin', cfg).getlogger()
+    logger = MyLogger('NNI_NAS', cfg).getlogger()
     logger.info(args)
     logger.info(cfg)
     with open(os.path.join(cfg.logger.path, 'cfg_search.yaml'), 'w') as f:
@@ -56,11 +56,11 @@ if __name__ == "__main__":
     logger.info('Cell choices: {}'.format(model.layers[0].nodes[0].cell_x.op_choice.choices))
     mutator = build_mutator(model, cfg)
     loss_function = build_loss_fn(cfg)
-    OPTIM = cfg.optim
+
     if cfg.optim.name == 'sgd':
-        optimizer = torch.optim.SGD(model.parameters(), cfg.optim.base_lr, momentum=OPTIM.momentum, weight_decay=OPTIM.weight_decay, nesterov=True)
+        optimizer = torch.optim.SGD(model.parameters(), cfg.optim.base_lr, momentum=cfg.optim.momentum, weight_decay=cfg.optim.weight_decay, nesterov=True)
     elif cfg.optim.name == 'adam':
-        optimizer = torch.optim.Adam(model.parameters(), cfg.optim.base_lr, weight_decay=OPTIM.weight_decay)
+        optimizer = torch.optim.Adam(model.parameters(), cfg.optim.base_lr, weight_decay=cfg.optim.weight_decay)
     else:
         raise NotImplementedError
     if cfg.optim.scheduler.name.lower() == 'multistep':
@@ -96,7 +96,7 @@ if __name__ == "__main__":
             optimizer=optimizer,
             callbacks=[LRSchedulerCallback(lr_scheduler),
                        ArchitectureCheckpoint(cfg.logger.path),
-                       CheckpointCallback(cfg.logger.path, optimizer, save_flag=True, cfg=cfg)],
+                       CheckpointCallback(cfg.logger.path, name='best_search.pth', mode=cfg.callback.checkpoint.mode)],
             dataset_train=dataset_train,
             dataset_valid=dataset_valid,
             debug=args.debug)

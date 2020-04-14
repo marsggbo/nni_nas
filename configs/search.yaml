@@ -31,10 +31,10 @@ callback:
         mode: 'max'
 dataset:
     batch_size: 8
-    datapath: '../datasets/skin100_dataset/train'
+    datapath: '../datasets'
     name: 'fakedata'
-    testlist: './datasets/test_skin10.txt'
-    trainlist: './datasets/train_skin10.txt'
+    testlist: './datasets/test.txt'
+    trainlist: './datasets/train.txt'
     workers: 4
 input:
     size: (32, 32)

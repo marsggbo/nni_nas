@@ -18,10 +18,10 @@ _C.input.size = (224, 224)
 # dataset
 # ---------------------------------------------------------------------------- #
 _C.dataset = CN()
-_C.dataset.name = 'skin10dataset'
-_C.dataset.datapath = '../datasets/skin100_dataset/train'
-_C.dataset.trainlist = './datasets/train_skin10.txt'
-_C.dataset.testlist = './datasets/test_skin10.txt'
+_C.dataset.name = 'fakedata'
+_C.dataset.datapath = '../datasets'
+_C.dataset.trainlist = './datasets/train.txt'
+_C.dataset.testlist = './datasets/test.txt'
 _C.dataset.batch_size = 8
 _C.dataset.workers = 4
 
@@ -73,13 +73,9 @@ _C.abtfs.cutout.fill_value = 127
 
 ## transforms for tensor
 _C.transforms.tensor = CN()
-# for skin100
 _C.transforms.tensor.normalization = CN()
-_C.transforms.tensor.normalization.mean = [0.6075, 0.4564, 0.4182] 
-_C.transforms.tensor.normalization.std = [0.2158, 0.1871, 0.1826]
-# _C.transforms.tensor.normalization = {
-#             'mean':[0.6054, 0.4433, 0.4084],
-#             'std': [0.2125, 0.1816, 0.1786]  # for skin10
+_C.transforms.tensor.normalization.mean = [0.5, 0.5, 0.5] 
+_C.transforms.tensor.normalization.std = [0.5, 0.5, 0.5] 
 _C.transforms.tensor.random_erasing = CN()
 _C.transforms.tensor.random_erasing.enable = 0
 _C.transforms.tensor.random_erasing.p = 0.5
