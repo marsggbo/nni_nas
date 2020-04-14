@@ -88,6 +88,7 @@ class Trainer(BaseTrainer):
     def set_up(self):
         # model
         self.model = build_model(self.cfg)
+        self.logger.info('Cell choices: {}'.format(self.model.layers[0].nodes[0].cell_x.op_choice.choices))
         self.logger.info(f"Building model {self.cfg.model.name} ...")
 
         # mutator

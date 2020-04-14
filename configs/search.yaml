@@ -53,11 +53,6 @@ kd:
         path: 'teacher_net.pt'
 label_transforms:
     name: 'default'
-logger:
-    log_file: './outputs\checkpoint_0\log_search.txt'
-    log_frequency: 100
-    name: ''
-    path: './outputs\checkpoint_0'
 loss:
     CrossEntropy:
         class_weight: []
@@ -130,7 +125,7 @@ trainer:
     accumulate_steps: 1
     device: 'cuda'
     device_ids: [0]
-    name: 'RandomTrainer'
+    name: 'EnasTrainer'
     num_epochs: 40
     startEpoch: 0
     startRound: 0

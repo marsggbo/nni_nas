@@ -53,7 +53,7 @@ if __name__ == "__main__":
 
     # configuration
     cfg = setup_cfg(args)
-    with open(os.path.join(cfg.logger.path, 'retraiin.yaml'), 'w') as f:
+    with open(os.path.join(cfg.logger.path, 'retrain.yaml'), 'w') as f:
         f.write(str(cfg))
     cfg.update({'args': args})
     logger = MyLogger(__name__, cfg).getlogger()

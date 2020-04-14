@@ -272,7 +272,10 @@ _C.callback.checkpoint.mode = 'max'
 _C.debug = False
 _C.comment = ''
 def _version_logger(save_dir, logger_name=''):
-    path = os.path.join(save_dir, logger_name)
+    if logger_name：
+        path = os.path.join(save_dir, logger_name)
+    else:
+        path = save_dir
     if (not os.path.exists(path)) or (not os.listdir(path)):
         version = 0
     else:

@@ -206,15 +206,14 @@ class DefaultEvaluator(BaseEvaluator):
 
             if validate:
                 self.logger.info("Epoch %d Validating", epoch)
-                crt_metric = self.valid_one_epoch(epoch, self.test_loader)
+                meters = self.valid_one_epoch(epoch, self.test_loader)
 
             self.lr_scheduler.step()
 
             for callback in self.callbacks:
-                if hasattr(callback, 'best_metric'):
-                    callback.on_epoch_end(epoch, crt_metric)
-                else:
-                    callback.on_epoch_end(epoch)
+                if isinstance(callback, CheckpointCallback):
+                    callback.update_best_metric(meters.meters['save_metric'].avg)
+                callback.on_epoch_end(epoch)
 
         self.logger.info("Final best Prec@1 = {:.4%}".format(self.best_metric))
 
@@ -334,10 +333,11 @@ class DefaultEvaluator(BaseEvaluator):
         self.logger.info("Valid: [{:3d}/{}] Final result {}".format(
             epoch + 1, config.trainer.num_epochs, self.valid_meters))
 
-        if self.mode: # the more the better, e.g. acc
-            return self.valid_meters['acc1'].avg
-        else: # the less, the better, e.g. epe
-            return self.valid_meters['valid_loss'].avg
+        return self.valid_meters
+        # if self.cfg.callback.checkpoint.mode: # the more the better, e.g. acc
+        #     return self.valid_meters['acc1'].avg
+        # else: # the less, the better, e.g. epe
+        #     return self.valid_meters['valid_loss'].avg
 
     def resume(self, mode=True):
         self.best_metric = -999
