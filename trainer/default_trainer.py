@@ -161,12 +161,42 @@ class Trainer(BaseTrainer):
         self.validate_one_epoch(-1)
 
     def export(self, file):
+        """
+        Call ``mutator.export()`` and dump the architecture to ``file``.
+
+        Parameters
+        ----------
+        file : str
+            A file path. Expected to be a JSON.
+        """
         mutator_export = self.mutator.export()
         with open(file, "w") as f:
             json.dump(mutator_export, f, indent=2, sort_keys=True, cls=TorchTensorEncoder)
 
     def checkpoint(self):
+        """
+        Return trainer checkpoint.
+        """
         raise NotImplementedError("Not implemented yet")
+
+    def enable_visualization(self):
+        """
+        Enable visualization. Write graph and training log to folder ``logs/<timestamp>``.
+        """
+        sample = None
+        for x, _ in self.train_loader:
+            sample = x.to(self.device)[:2]
+            break
+        if sample is None:
+            self.logger.warning("Sample is %s.", sample)
+        self.logger.info("Creating graph json, writing to %s. Visualization enabled.", self.cfg.logger.path)
+        with open(os.path.join(self.cfg.logger.path, "graph.json"), "w") as f:
+            json.dump(self.mutator.graph(sample), f)
+        self.visualization_enabled = True
+
+    def _write_graph_status(self):
+        if hasattr(self, "visualization_enabled") and self.visualization_enabled:
+            print(json.dumps(self.mutator.status()), file=self.status_writer, flush=True)
 
     def model_size(self):
         return calc_real_model_size(self.model, self.mutator)*4/1024**2

@@ -1,4 +1,4 @@
-NNI_NAS v0.1
+NNI_NAS v0.2
 
 # Dependences
 
@@ -30,6 +30,6 @@ CUDA_VISIBLE_DEVICES=0 python retrain.py --config_file ./configs/retrain.yaml --
 
 # Todo
 
-- [ ] add DARTS
+- [x] add DARTS (todo in sample_final)
 - [ ] update documents
 - [ ] use [torchline](https://github.com/marsggbo/torchline) API?

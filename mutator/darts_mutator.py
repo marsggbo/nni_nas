@@ -72,8 +72,9 @@ class DartsMutator(Mutator):
                 if mutable.n_chosen is not None:
                     weights = []
                     for src_key in mutable.choose_from:
-                        if src_key not in edges_max:
-                            _logger.warning("InputChoice.NO_KEY in '%s' is weighted 0 when selecting inputs.", mutable.key)
+                        # todo: figure out this issue
+                        # if src_key not in edges_max:
+                        #     print("InputChoice.NO_KEY in '%s' is weighted 0 when selecting inputs.", mutable.key)
                         weights.append(edges_max.get(src_key, 0.))
                     weights = torch.tensor(weights)  # pylint: disable=not-callable
                     _, topk_edge_indices = torch.topk(weights, mutable.n_chosen)

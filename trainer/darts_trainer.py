@@ -117,8 +117,9 @@ class DartsTrainer(Trainer):
             metrics["loss"] = loss.item()
             meters.update(metrics)
             if self.log_frequency is not None and step % self.log_frequency == 0:
-                logger.info("Epoch [%s/%s] Step [%s/%s]  %s", epoch + 1,
+                self.logger.info("Epoch [%s/%s] Step [%s/%s]  %s", epoch + 1,
                             self.num_epochs, step + 1, len(self.train_loader), meters)
+        return meters
 
     def validate_one_epoch(self, epoch):
         self.model.eval()
@@ -132,15 +133,22 @@ class DartsTrainer(Trainer):
                 metrics = self.metrics(logits, y)
                 meters.update(metrics)
                 if self.log_frequency is not None and step % self.log_frequency == 0:
-                    logger.info("Epoch [%s/%s] Step [%s/%s]  %s", epoch + 1,
+                    self.logger.info("Epoch [%s/%s] Step [%s/%s]  %s", epoch + 1,
                                 self.num_epochs, step + 1, len(self.test_loader), meters)
+        return meters
 
     def _logits_and_loss(self, X, y):
         self.mutator.reset()
-        logits = self.model(X)
-        loss = self.loss(logits, y)
+        output = self.model(X)
+        if isinstance(output, tuple):
+            output, aux_output = output
+            aux_loss = self.loss(aux_output, y)
+        else:
+            aux_loss = 0.
+        loss = self.loss(output, y)
+        loss = loss + self.cfg.model.aux_weight * aux_loss
         self._write_graph_status()
-        return logits, loss
+        return output, loss
 
     def _backward(self, val_X, val_y):
         """
@@ -207,7 +215,7 @@ class DartsTrainer(Trainer):
         norm = torch.cat([w.view(-1) for w in dw]).norm()
         eps = 0.01 / norm
         if norm < 1E-8:
-            logger.warning("In computing hessian, norm is smaller than 1E-8, cause eps to be %.6f.", norm.item())
+            self.logger.warning("In computing hessian, norm is smaller than 1E-8, cause eps to be %.6f.", norm.item())
 
         dalphas = []
         for e in [eps, -2. * eps]:
