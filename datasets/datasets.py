@@ -17,17 +17,33 @@ __all__ = [
 
 @DATASET_REGISTRY.register()
 def MNIST(cfg):
-    root = cfg.dataset.dir
-    is_train = cfg.dataset.is_train
-    transform = build_transforms(cfg)
-    return _MNIST(root=root, train=is_train, transform=transform.transform, download=True)
+    cfg.defrost()
+    root = cfg.dataset.datapath
+
+    datasets = []
+    for is_train in [True, False]:
+        cfg.dataset.is_train = is_train
+        transform = build_transforms(cfg)
+        datasets.append(_MNIST(root=root, train=is_train,
+                        transform=transform.transform, download=True))
+    dataset_train, dataset_valid = datasets
+    cfg.freeze()
+    return dataset_train, dataset_valid
 
 @DATASET_REGISTRY.register()
 def CIFAR10(cfg):
-    root = cfg.dataset.dir
-    is_train = cfg.dataset.is_train
-    transform = build_transforms(cfg)
-    return _CIFAR10(root=root, train=is_train, transform=transform.transform, download=True)
+    cfg.defrost()
+    root = cfg.dataset.datapath
+
+    datasets = []
+    for is_train in [True, False]:
+        cfg.dataset.is_train = is_train
+        transform = build_transforms(cfg)
+        datasets.append(_CIFAR10(root=root, train=is_train,
+                        transform=transform.transform, download=True))
+    dataset_train, dataset_valid = datasets
+    cfg.freeze()
+    return dataset_train, dataset_valid
 
 class FakeData(torch.utils.data.Dataset):
     def __init__(self, size=32, classes=10):
